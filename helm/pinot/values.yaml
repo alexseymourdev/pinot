@@ -96,7 +96,7 @@ controller:
   persistence:
     enabled: true
     accessMode: ReadWriteOnce
-    size: 1G
+    size: 10G
     mountPath: /var/pinot/controller/data
     storageClass: ""
     extraVolumes: []
