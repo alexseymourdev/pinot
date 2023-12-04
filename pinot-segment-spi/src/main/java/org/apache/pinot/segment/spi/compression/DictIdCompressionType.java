@@ -16,13 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.pinot.query.planner;
+package org.apache.pinot.segment.spi.compression;
 
 /**
- * Metadata for a plan fragment. This class won't leave the query planner/broker side.
+ * Compression type for dictionary-encoded forward index, where the values stored are dictionary ids.
  */
-public class PlanFragmentMetadata {
+public enum DictIdCompressionType {
+  // Add a second level dictionary encoding for the multi-value entries
+  MV_ENTRY_DICT(false, true);
 
-  public PlanFragmentMetadata() {
+  private final boolean _applicableToSV;
+  private final boolean _applicableToMV;
+
+  DictIdCompressionType(boolean applicableToSV, boolean applicableToMV) {
+    _applicableToSV = applicableToSV;
+    _applicableToMV = applicableToMV;
+  }
+
+  public boolean isApplicableToSV() {
+    return _applicableToSV;
+  }
+
+  public boolean isApplicableToMV() {
+    return _applicableToMV;
+  }
+
+  public boolean isApplicable(boolean isSingleValue) {
+    return isSingleValue ? isApplicableToSV() : isApplicableToMV();
   }
 }
