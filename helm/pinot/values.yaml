@@ -31,11 +31,11 @@ image:
   #   - MS OpenJDK 11, e.g. `latest-11-ms-openjdk`, `1.0.0-11-ms-openjdk`
   #   - MS OpenJDK 17, e.g. `latest-17-ms-openjdk`, `1.0.0-17-ms-openjdk`
   #   - OpenJDK 21, e.g. `latest-21-openjdk`, `1.0.0-21-openjdk`
-  tag: latest # 1.0.0, 0.12.1, latest
+  tag: 1.0.0 # 1.0.0, 0.12.1, latest
   pullPolicy: Always # Use IfNotPresent when you pinged a version of image tag
 
 cluster:
-  name: pinot-quickstart
+  name: pinot-population-health
 
 imagePullSecrets: []
 
@@ -121,7 +121,7 @@ controller:
     externalIPs: []
     loadBalancerIP: ""
     loadBalancerSourceRanges: []
-    type: ClusterIP
+    type: NodePort
     port: 9000
     nodePort: ""
     protocol: TCP
@@ -145,12 +145,19 @@ controller:
       path: /
       hosts: [ ]
     v1:
-      enabled: false
-      ingressClassName: ""
-      annotations: {}
+      enabled: true
+      ingressClassName: "alb"
+      annotations: 
+        alb.ingress.kubernetes.io/scheme: internal
+        # alb.ingress.kubernetes.io/inbound-cidrs: 10.0.0.0/8, 86.23.0.0/16, 185.108.0.0/16, 147.147.73.43/16, 208.127.0.0/16
+        # alb.ingress.kubernetes.io/subnets: subnet-0cac670aabd3cd85c, subnet-0ce91469e1c92c8fe, subnet-01f1394b04c80fce2 #Dev
+        alb.ingress.kubernetes.io/subnets: subnet-0e864d83c4608daae, subnet-04ec32d21c44eec48, subnet-0e32e141ab2461ae1  #Prod
       tls: []
       path: /
-      hosts: []
+      hosts: [
+        controller.lscsis-pinot.com
+        # dev.controller.lscsis-pinot.com
+      ]
 
   resources:
     requests:
@@ -225,7 +232,7 @@ broker:
     externalIPs: []
     loadBalancerIP: ""
     loadBalancerSourceRanges: []
-    type: ClusterIP
+    type: NodePort
     protocol: TCP
     port: 8099
     name: broker
@@ -250,12 +257,20 @@ broker:
       path: /
       hosts: []
     v1:
-      enabled: false
-      ingressClassName: ""
-      annotations: {}
+      enabled: true
+      ingressClassName: "alb"
+      annotations:
+        alb.ingress.kubernetes.io/success-codes: 200,404
+        alb.ingress.kubernetes.io/scheme: internal
+        # alb.ingress.kubernetes.io/inbound-cidrs: 10.0.0.0/8, 86.23.0.0/16, 185.108.0.0/16, 147.147.73.43/16, 208.127.0.0/16
+        # alb.ingress.kubernetes.io/subnets: subnet-0cac670aabd3cd85c, subnet-0ce91469e1c92c8fe, subnet-01f1394b04c80fce2 #Dev
+        alb.ingress.kubernetes.io/subnets: subnet-0e864d83c4608daae, subnet-04ec32d21c44eec48, subnet-0e32e141ab2461ae1  #Prod
       tls: []
       path: /
-      hosts: []
+      hosts: [
+        # dev.broker.lscsis-pinot.com
+        broker.lscsis-pinot.com
+      ]
 
   resources:
     requests:
@@ -326,7 +341,7 @@ server:
     extraVolumes: []
     extraVolumeMounts: []
 
-  jvmOpts: "-Xms512M -Xmx1G -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Xlog:gc*:file=/opt/pinot/gc-pinot-server.log"
+  jvmOpts: "-Xms512M -Xmx2G -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Xlog:gc*:file=/opt/pinot/gc-pinot-server.log"
 
   log4j2ConfFile: /opt/pinot/etc/config/pinot-server-log4j2.xml
   pluginsDir: /opt/pinot/plugins
@@ -352,7 +367,7 @@ server:
 
   resources:
     requests:
-      memory: "1.25Gi"
+      memory: "4Gi"
 
   nodeSelector: {}
 
@@ -507,7 +522,7 @@ minionStateless:
     accessMode: ReadWriteOnce
     size: 4G
     mountPath: /var/pinot/minion/data
-    storageClass: ""
+    storageClass: "" 
     #storageClass: "ssd"
     extraVolumes: []
     extraVolumeMounts: []

@@ -25,6 +25,7 @@ data:
   pinot-broker.conf: |-
     pinot.broker.client.queryPort={{ .Values.broker.service.port }}
     pinot.broker.routing.table.builder.class={{ .Values.broker.routingTable.builderClass }}
+    pinot.broker.disable.query.groovy=false
 {{ .Values.broker.extra.configs | indent 4 }}
 {{- if .Values.pinotAuth.enabled}}
     pinot.broker.access.control.class={{ .Values.pinotAuth.brokerFactoryClass }}
